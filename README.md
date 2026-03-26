@@ -160,7 +160,7 @@ theme = light:catppuccin latte,dark:catppuccin mocha
 
 # ===== SSH 호환성 =====
 term = xterm-256color
-shell-integration-features = sudo,title,ssh-terminfo,ssh-env
+shell-integration-features = sudo,title
 
 # ===== 창 설정 =====
 macos-titlebar-style = tabs
