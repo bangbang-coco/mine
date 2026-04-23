@@ -7,28 +7,31 @@
 
 ## 빠른 설치 (TL;DR)
 
-한 줄로 전체 세팅:
+한 줄로 전체 세팅 (dotfile까지 자동 작성):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bangbang-coco/mine/main/setup.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/bangbang-coco/mine/main/setup.sh)
 ```
 
-이 스크립트가 자동으로 처리하는 것:
+> `curl ... | bash` 대신 `bash <(curl ...)`를 쓴다. 파이프 방식은 stdin이 막혀 sudo 비밀번호·chsh 프롬프트가 동작하지 않는다.
 
-- Xcode Command Line Tools, Homebrew
+스크립트가 자동으로 처리하는 것:
+
+- Xcode Command Line Tools, Homebrew (`NONINTERACTIVE=1`)
 - CLI 도구 (neovim, starship, fzf, zoxide, bat, eza, fd, ripgrep, tmux, lazygit, git-delta 등)
 - GUI 앱 (Ghostty, Raycast, Alt-Tab, Stats)
 - Nerd Font (MesloLGS, D2CodingLigature)
+- **dotfile 작성** (`~/.zshrc`, `~/.config/starship.toml`, `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`) - 기존 파일은 `.bak.<timestamp>` 로 백업 후 덮어씀
 - 기본 셸 zsh 변경
 - Git 기본 설정 (pull.rebase, delta pager 등)
 - Python 패키지 매니저 `uv`
 
 수동으로 해야 하는 것:
 
-- dotfile 복사 (`~/.zshrc`, `~/.config/starship.toml`, `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`) - 섹션 8 참고
 - `git config --global user.name` / `user.email`
 - SSH 키 생성 (섹션 10)
 - macOS 시스템 환경설정 (섹션 0)
+- Neovim 플러그인 설정 (섹션 8-5)
 
 각 단계를 상세하게 이해하고 싶으면 아래 섹션 0부터 순서대로 읽는다.
 
@@ -775,57 +778,33 @@ gh auth login
 
 ## 12. 전체 설치 원라이너 (자동화)
 
-위 과정을 한 번에 실행하는 스크립트. 새 Mac에서 복붙하면 된다.
+위 과정을 한 번에 실행하는 스크립트는 이 저장소의 [`setup.sh`](./setup.sh)에 있다.
 
 ```bash
-#!/bin/bash
-set -e
-
-echo ">>> Xcode CLI Tools"
-xcode-select --install 2>/dev/null || true
-
-echo ">>> Homebrew"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-echo ">>> CLI 도구"
-brew install neovim starship fzf zoxide bat eza fd ripgrep jq tmux htop tlrc wget lazygit git-delta dust bottom gh yazi zsh-autosuggestions zsh-syntax-highlighting
-
-echo ">>> GUI 앱"
-brew install --cask ghostty raycast alt-tab stats
-
-echo ">>> Nerd Font"
-brew install --cask font-meslo-lg-nerd-font font-d2coding-nerd-font
-
-echo ">>> Neovim (lazy.nvim)"
-mkdir -p ~/.config/nvim/lua/plugins
-# init.lua와 플러그인 설정 파일은 별도 복사 필요 (위 8-5 참고)
-
-echo ">>> 기본 셸 zsh 변경"
-chsh -s /bin/zsh
-
-echo ">>> Git 설정"
-git config --global init.defaultBranch main
-git config --global pull.rebase true
-git config --global rerere.enabled true
-git config --global diff.algorithm histogram
-git config --global merge.conflictstyle zdiff3
-git config --global core.pager delta
-git config --global interactive.diffFilter "delta --color-only"
-git config --global delta.navigate true
-git config --global delta.dark true
-git config --global delta.line-numbers true
-git config --global delta.side-by-side true
-
-echo ">>> Python (uv)"
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-echo ""
-echo "=== 완료! ==="
-echo "1. 새 터미널을 열어주세요"
-echo "2. ~/.zshrc, ~/.config/starship.toml, ~/.config/ghostty/config, ~/.config/tmux/tmux.conf 설정 파일을 복사해주세요"
-echo "3. git config --global user.name / user.email 설정해주세요"
+bash <(curl -fsSL https://raw.githubusercontent.com/bangbang-coco/mine/main/setup.sh)
 ```
+
+> `curl ... | bash` 방식은 sudo 비밀번호·chsh 대화형 프롬프트가 동작하지 않으므로 `bash <(curl ...)`을 권장한다.
+
+스크립트 실행 순서:
+
+1. Xcode Command Line Tools 설치 (이미 있으면 스킵, 없으면 팝업 완료까지 대기)
+2. Homebrew 설치 (`NONINTERACTIVE=1`) 및 `~/.zprofile` 등록
+3. CLI 도구 brew install (neovim, starship, fzf, zoxide, bat, eza, fd, ripgrep, jq, tmux, htop, tlrc, wget, lazygit, git-delta, dust, bottom, gh, yazi, zsh-autosuggestions, zsh-syntax-highlighting)
+4. GUI 앱 brew install --cask (ghostty, raycast, alt-tab, stats)
+5. Nerd Font 설치 (font-meslo-lg-nerd-font, font-d2coding-nerd-font)
+6. `~/.config/nvim|ghostty|tmux` 디렉토리 생성
+7. **dotfile 작성** - `~/.zshrc`, `~/.config/starship.toml`, `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`. 기존 파일은 `.bak.<timestamp>`로 백업 후 덮어씀
+8. 기본 셸을 `/bin/zsh`로 변경
+9. Git 기본 설정 (`pull.rebase`, `diff.algorithm`, delta pager 등)
+10. Python 패키지 매니저 `uv` 설치
+
+스크립트 종료 후 수동 단계:
+
+- `git config --global user.name/user.email`
+- SSH 키 생성 (섹션 10)
+- Neovim 플러그인 설정 (섹션 8-5)
+- macOS 시스템 환경설정 (섹션 0)
 
 ---
 
