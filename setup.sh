@@ -355,27 +355,326 @@ set -g pane-active-border-style "fg=#89b4fa"
 set -g message-style "bg=#313244,fg=#cdd6f4"
 TMUX_EOF
 
+# ----- ~/.config/nvim/init.lua -----
+backup_if_exists "$HOME/.config/nvim/init.lua"
+cat > "$HOME/.config/nvim/init.lua" <<'NVIM_INIT_EOF'
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- Leader
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
+-- Options
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.mouse = "a"
+vim.opt.showmode = false
+vim.opt.clipboard = "unnamedplus"
+vim.opt.breakindent = true
+vim.opt.undofile = true
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.signcolumn = "yes"
+vim.opt.updatetime = 250
+vim.opt.timeoutlen = 300
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.list = true
+vim.opt.listchars = { tab = "  ", trail = "·", nbsp = "␣" }
+vim.opt.inccommand = "split"
+vim.opt.cursorline = true
+vim.opt.scrolloff = 10
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.expandtab = true
+vim.opt.termguicolors = true
+
+-- Keymaps
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+vim.keymap.set("n", "<C-h>", "<C-w><C-h>")
+vim.keymap.set("n", "<C-l>", "<C-w><C-l>")
+vim.keymap.set("n", "<C-j>", "<C-w><C-j>")
+vim.keymap.set("n", "<C-k>", "<C-w><C-k>")
+
+-- Plugins
+require("lazy").setup("plugins")
+NVIM_INIT_EOF
+
+# ----- ~/.config/nvim/lua/plugins/colorscheme.lua -----
+backup_if_exists "$HOME/.config/nvim/lua/plugins/colorscheme.lua"
+cat > "$HOME/.config/nvim/lua/plugins/colorscheme.lua" <<'NVIM_COLOR_EOF'
+return {
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    priority = 1000,
+    opts = {
+      flavour = "mocha",
+      transparent_background = false,
+      integrations = {
+        treesitter = true,
+        telescope = { enabled = true },
+        mini = { enabled = true },
+        gitsigns = true,
+        which_key = true,
+      },
+    },
+    config = function(_, opts)
+      require("catppuccin").setup(opts)
+      local ok, _ = pcall(vim.cmd.colorscheme, "catppuccin")
+      if not ok then
+        vim.cmd.colorscheme("habamax")
+      end
+    end,
+  },
+}
+NVIM_COLOR_EOF
+
+# ----- ~/.config/nvim/lua/plugins/editor.lua -----
+backup_if_exists "$HOME/.config/nvim/lua/plugins/editor.lua"
+cat > "$HOME/.config/nvim/lua/plugins/editor.lua" <<'NVIM_EDITOR_EOF'
+return {
+  -- Fuzzy finder
+  {
+    "nvim-telescope/telescope.nvim",
+    branch = "0.1.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    },
+    keys = {
+      { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+      { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },
+      { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+      { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help tags" },
+      { "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Search in buffer" },
+    },
+    config = function()
+      require("telescope").setup({})
+      pcall(require("telescope").load_extension, "fzf")
+    end,
+  },
+
+  -- File explorer
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
+    keys = {
+      { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "File explorer" },
+    },
+    opts = {
+      filesystem = { follow_current_file = { enabled = true } },
+    },
+  },
+
+  -- Which key
+  { "folke/which-key.nvim", event = "VeryLazy", opts = {} },
+
+  -- Autopairs
+  { "windwp/nvim-autopairs", event = "InsertEnter", opts = {} },
+
+  -- Comment
+  {
+    "numToStr/Comment.nvim",
+    keys = {
+      { "gcc", mode = "n", desc = "Comment line" },
+      { "gc", mode = "v", desc = "Comment selection" },
+    },
+    opts = {},
+  },
+
+  -- Git signs
+  { "lewis6991/gitsigns.nvim", event = { "BufReadPre", "BufNewFile" }, opts = {} },
+
+  -- Surround
+  { "kylechui/nvim-surround", event = "VeryLazy", opts = {} },
+}
+NVIM_EDITOR_EOF
+
+# ----- ~/.config/nvim/lua/plugins/ui.lua -----
+backup_if_exists "$HOME/.config/nvim/lua/plugins/ui.lua"
+cat > "$HOME/.config/nvim/lua/plugins/ui.lua" <<'NVIM_UI_EOF'
+return {
+  -- Status line
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    event = "VeryLazy",
+    opts = { options = { theme = "auto" } },
+  },
+
+  -- Buffer line
+  {
+    "akinsho/bufferline.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    event = "VeryLazy",
+    opts = {
+      options = {
+        diagnostics = "nvim_lsp",
+        offsets = {
+          { filetype = "neo-tree", text = "Explorer", highlight = "Directory" },
+        },
+      },
+    },
+    keys = {
+      { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
+      { "<S-l>", "<cmd>BufferLineCycleNext<cr>", desc = "Next buffer" },
+      { "<leader>bd", "<cmd>bdelete<cr>", desc = "Delete buffer" },
+    },
+  },
+
+  -- Indent guides
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {},
+  },
+
+  -- Notifications
+  {
+    "rcarriga/nvim-notify",
+    opts = { timeout = 2000, render = "compact" },
+  },
+}
+NVIM_UI_EOF
+
+# ----- ~/.config/nvim/lua/plugins/lsp.lua -----
+backup_if_exists "$HOME/.config/nvim/lua/plugins/lsp.lua"
+cat > "$HOME/.config/nvim/lua/plugins/lsp.lua" <<'NVIM_LSP_EOF'
+return {
+  -- Mason
+  { "mason-org/mason.nvim", opts = {} },
+
+  -- Mason-lspconfig
+  {
+    "mason-org/mason-lspconfig.nvim",
+    dependencies = { "mason-org/mason.nvim", "neovim/nvim-lspconfig" },
+    opts = {
+      ensure_installed = { "lua_ls", "pyright", "ruff" },
+    },
+  },
+
+  -- LSP config
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    config = function()
+      vim.lsp.config("lua_ls", {
+        settings = {
+          Lua = {
+            diagnostics = { globals = { "vim" } },
+            workspace = { checkThirdParty = false },
+          },
+        },
+      })
+
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(event)
+          local map = function(keys, func, desc)
+            vim.keymap.set("n", keys, func, { buffer = event.buf, desc = desc })
+          end
+          map("gd", vim.lsp.buf.definition, "Go to definition")
+          map("gr", vim.lsp.buf.references, "Go to references")
+          map("K", vim.lsp.buf.hover, "Hover")
+          map("<leader>ca", vim.lsp.buf.code_action, "Code action")
+          map("<leader>rn", vim.lsp.buf.rename, "Rename")
+        end,
+      })
+    end,
+  },
+
+  -- Autocompletion
+  {
+    "hrsh7th/nvim-cmp",
+    event = "InsertEnter",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+      "L3MON4D3/LuaSnip",
+      "saadparwaiz1/cmp_luasnip",
+    },
+    config = function()
+      local cmp = require("cmp")
+      local luasnip = require("luasnip")
+      cmp.setup({
+        snippet = {
+          expand = function(args) luasnip.lsp_expand(args.body) end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ["<C-n>"] = cmp.mapping.select_next_item(),
+          ["<C-p>"] = cmp.mapping.select_prev_item(),
+          ["<C-d>"] = cmp.mapping.scroll_docs(-4),
+          ["<C-f>"] = cmp.mapping.scroll_docs(4),
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+        }),
+        sources = {
+          { name = "nvim_lsp" },
+          { name = "luasnip" },
+          { name = "buffer" },
+          { name = "path" },
+        },
+      })
+    end,
+  },
+
+  -- Treesitter
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    lazy = false,
+    config = function()
+      require("nvim-treesitter").setup({})
+      require("nvim-treesitter").install({
+        "lua", "python", "bash", "json", "yaml", "toml",
+        "markdown", "markdown_inline", "vim", "vimdoc",
+      })
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "*",
+        callback = function() pcall(vim.treesitter.start) end,
+      })
+    end,
+  },
+}
+NVIM_LSP_EOF
+
+log "Neovim 플러그인 사전 설치 (headless)"
+if command -v nvim >/dev/null 2>&1; then
+  nvim --headless "+Lazy! sync" +qa 2>/dev/null || echo "lazy sync 실패 - 첫 nvim 실행 시 자동 재시도됨."
+fi
+
 # ===== 8. 기본 셸 zsh =====
 log "기본 셸 zsh"
 if [[ "$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')" != "/bin/zsh" ]]; then
   chsh -s /bin/zsh || echo "chsh 실패 - 수동으로 'chsh -s /bin/zsh' 실행."
 fi
 
-# ===== 9. Git 설정 (user.name/email은 따로) =====
-log "Git 설정"
-git config --global init.defaultBranch main
-git config --global pull.rebase true
-git config --global rerere.enabled true
-git config --global diff.algorithm histogram
-git config --global merge.conflictstyle zdiff3
-git config --global core.pager delta
-git config --global interactive.diffFilter "delta --color-only"
-git config --global delta.navigate true
-git config --global delta.dark true
-git config --global delta.line-numbers true
-git config --global delta.side-by-side true
-
-# ===== 10. Python (uv) =====
+# ===== 9. Python (uv) =====
 log "Python (uv)"
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -385,13 +684,9 @@ fi
 cat <<'DONE'
 
 === 설치 완료 ===
-dotfile은 자동 작성됐다 (기존 파일은 *.bak.<timestamp>로 백업).
+dotfile과 Neovim 설정은 자동 작성됐다 (기존 파일은 *.bak.<timestamp>로 백업).
 
 남은 수동 작업:
-  1. 새 터미널 열기
-  2. git config --global user.name "이름"
-     git config --global user.email "이메일"
-  3. ssh-keygen -t ed25519 -C "이메일" (필요 시)
-  4. macOS 시스템 환경설정 (README 섹션 0 참고)
-  5. Neovim lazy.nvim 플러그인 설정 (README 섹션 8-5 참고)
+  - macOS 시스템 환경설정 (README 섹션 0 참고)
+  - 새 터미널 열기 (셸 변경 적용)
 DONE

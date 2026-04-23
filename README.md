@@ -22,16 +22,11 @@ bash <(curl -fsSL https://raw.githubusercontent.com/bangbang-coco/mine/main/setu
 - GUI 앱 (Ghostty, Raycast, Alt-Tab, Stats)
 - Nerd Font (MesloLGS, D2CodingLigature)
 - **dotfile 작성** (`~/.zshrc`, `~/.config/starship.toml`, `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`) - 기존 파일은 `.bak.<timestamp>` 로 백업 후 덮어씀
+- **Neovim 설정 작성** (`~/.config/nvim/init.lua`, `~/.config/nvim/lua/plugins/*.lua`) - 첫 `nvim` 실행 시 lazy.nvim이 플러그인 자동 설치
 - 기본 셸 zsh 변경
-- Git 기본 설정 (pull.rebase, delta pager 등)
 - Python 패키지 매니저 `uv`
 
-수동으로 해야 하는 것:
-
-- `git config --global user.name` / `user.email`
-- SSH 키 생성 (섹션 10)
-- macOS 시스템 환경설정 (섹션 0)
-- Neovim 플러그인 설정 (섹션 8-5)
+macOS 시스템 환경설정(키보드/Dock/Finder/트랙패드 등)은 스크립트가 건드리지 않으니 섹션 0을 참고해서 직접 설정한다.
 
 각 단계를 상세하게 이해하고 싶으면 아래 섹션 0부터 순서대로 읽는다.
 
@@ -492,54 +487,7 @@ disabled = true
 disabled = true
 ```
 
-### 8-3. Git (~/.gitconfig)
-
-```bash
-git config --global user.name "이름"
-git config --global user.email "이메일"
-git config --global init.defaultBranch main
-git config --global pull.rebase true
-git config --global rerere.enabled true
-git config --global diff.algorithm histogram
-git config --global merge.conflictstyle zdiff3
-
-# git-delta (diff 뷰어)
-git config --global core.pager delta
-git config --global interactive.diffFilter "delta --color-only"
-git config --global delta.navigate true
-git config --global delta.dark true
-git config --global delta.line-numbers true
-git config --global delta.side-by-side true
-```
-
-완성된 `~/.gitconfig`:
-
-```gitconfig
-[user]
-    name = 이름
-    email = 이메일
-[init]
-    defaultBranch = main
-[pull]
-    rebase = true
-[rerere]
-    enabled = true
-[diff]
-    algorithm = histogram
-[merge]
-    conflictstyle = zdiff3
-[core]
-    pager = delta
-[interactive]
-    diffFilter = delta --color-only
-[delta]
-    navigate = true
-    dark = true
-    line-numbers = true
-    side-by-side = true
-```
-
-### 8-4. tmux (~/.config/tmux/tmux.conf)
+### 8-3. tmux (~/.config/tmux/tmux.conf)
 
 ```bash
 mkdir -p ~/.config/tmux
@@ -612,7 +560,7 @@ set -g pane-active-border-style "fg=#89b4fa"
 set -g message-style "bg=#313244,fg=#cdd6f4"
 ```
 
-### 8-5. Neovim (lazy.nvim)
+### 8-4. Neovim (lazy.nvim)
 
 lazy.nvim 기반 커스텀 설정. catppuccin 테마, LSP, 자동완성, Telescope 등 포함.
 
@@ -654,7 +602,7 @@ nvim
 | `Shift + H/L` | 이전/다음 버퍼 탭 |
 | `y` | 선택 복사 (macOS 클립보드 연동) |
 
-> 설정 파일 전문은 GitHub 저장소 참고: (링크 추가 예정)
+> 설정 파일 전문은 [`setup.sh`](./setup.sh)의 heredoc 블록 참고.
 
 ---
 
@@ -711,29 +659,7 @@ Docker Desktop 실행 후 초기 설정 완료.
 
 ---
 
-## 10. SSH 키 생성
-
-```bash
-# Ed25519 키 생성 (RSA보다 빠르고 안전)
-ssh-keygen -t ed25519 -C "이메일@example.com"
-
-# ssh-agent에 등록
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
-
-# 공개키 복사 (GitHub 등에 등록)
-pbcopy < ~/.ssh/id_ed25519.pub
-```
-
-GitHub에 등록:
-
-```bash
-gh auth login
-```
-
----
-
-## 11. 단축키 요약
+## 10. 단축키 요약
 
 ### Ghostty
 
@@ -776,7 +702,7 @@ gh auth login
 
 ---
 
-## 12. 전체 설치 원라이너 (자동화)
+## 11. 전체 설치 원라이너 (자동화)
 
 위 과정을 한 번에 실행하는 스크립트는 이 저장소의 [`setup.sh`](./setup.sh)에 있다.
 
@@ -795,16 +721,11 @@ bash <(curl -fsSL https://raw.githubusercontent.com/bangbang-coco/mine/main/setu
 5. Nerd Font 설치 (font-meslo-lg-nerd-font, font-d2coding-nerd-font)
 6. `~/.config/nvim|ghostty|tmux` 디렉토리 생성
 7. **dotfile 작성** - `~/.zshrc`, `~/.config/starship.toml`, `~/.config/ghostty/config`, `~/.config/tmux/tmux.conf`. 기존 파일은 `.bak.<timestamp>`로 백업 후 덮어씀
-8. 기본 셸을 `/bin/zsh`로 변경
-9. Git 기본 설정 (`pull.rebase`, `diff.algorithm`, delta pager 등)
+8. **Neovim 설정 작성** - `~/.config/nvim/init.lua` + `~/.config/nvim/lua/plugins/*.lua`. 첫 `nvim` 실행 시 lazy.nvim이 플러그인 자동 설치 (headless 모드로 스크립트에서 선반영)
+9. 기본 셸을 `/bin/zsh`로 변경
 10. Python 패키지 매니저 `uv` 설치
 
-스크립트 종료 후 수동 단계:
-
-- `git config --global user.name/user.email`
-- SSH 키 생성 (섹션 10)
-- Neovim 플러그인 설정 (섹션 8-5)
-- macOS 시스템 환경설정 (섹션 0)
+macOS 시스템 환경설정(섹션 0)은 스크립트가 건드리지 않으니 직접 설정한다.
 
 ---
 
